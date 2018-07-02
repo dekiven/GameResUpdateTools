@@ -262,21 +262,24 @@ class AppFrame(ttk.Frame):
 			# 暂时不检测版本号更新
 			if self.newVerWid.hasVersionChanged() or True:
 				# TODO: 生成更新日志和当前文件配置表，复制更改的文件备份并上传
-				for _plat in plat :
-					rPath = self.getBundlePath(_plat)
-					sPath = self.getBServerPath(_plat)
-					res = ResConfigManager(rPath, version)
-					# res.getCurResInfos()
-					# res.saveConfig()
-					# res.addLog('0.0.2', {'f1':'12345',})
-					change = res.getChangedInfo()
-					res.addLog(version, change)
-					res.saveConfig()
-					self.backRes(rPath, pathJoin(bPath, '%s/%s'%(projName, _plat)), version, list(change.keys()))
-					# ShowInfoDialog(u'更新版本信息完成！')
-				rst = ShowAskDialog('是否将资源更新到服务器？')
-				if rst :
-					self.updateServer(rPath, sPath, version, list(change.keys()))
+				# for _plat in plat :
+				_plat = self.platCombo.get()
+				rPath = self.getBundlePath(_plat)
+				sPath = self.getBServerPath(_plat)
+				res = ResConfigManager(rPath, version)
+				# res.getCurResInfos()
+				# res.saveConfig()
+				# res.addLog('0.0.2', {'f1':'12345',})
+				change = res.getChangedInfo()
+				res.addLog(version, change)
+				res.saveConfig()
+				self.backRes(rPath, pathJoin(bPath, '%s/%s'%(projName, _plat)), version, list(change.keys()))
+				# ShowInfoDialog(u'更新版本信息完成！')
+			# rst = ShowAskDialog('是否将资源更新到服务器？')
+				# if rst :
+				self.updateServer(rPath, sPath, version, list(change.keys()))
+				ShowInfoDialog(u'更新%s版本%s信息完成！'%(version, _plat))
+
 			else :
 				ShowInfoDialog(u'版本号没有变更！')
 			self.saveCurProj()
@@ -448,10 +451,11 @@ class AppFrame(ttk.Frame):
 		shutil.copyfile(pathJoin(path, historyFileName), pathJoin(outPath, historyFileName))
 
 	def updateServer(self, path, outPath, version, files) :
+		print('updateServer', path, outPath, version, files)
 		if len(files) == 0 :
 			# print(u'没有资源变动，不打包备份。')
 			return
-		zipName = 'v_%s.zip'%(version)
+		# zipName = 'v_%s.zip'%(version)
 		if not os.path.isdir(path) :
 			# print(u'资源文件夹"%s"不存在！！！'%(path))
 			return
@@ -464,6 +468,7 @@ class AppFrame(ttk.Frame):
 		# p = pathJoin(path, f)
 		for f in files :
 			shutil.copyfile(pathJoin(path, f), pathJoin(outPath, f))
+			# print('copy', pathJoin(path, f), pathJoin(outPath, f))
 
 	def setFiles(self, files) :
 		# buildPlatAll 定义的渠道名是特殊的资源，每个渠道不同，但所有渠道都需要

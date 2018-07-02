@@ -2,9 +2,9 @@
     "curProj": "GameFramework", 
     "projs": {
         "GameFramework": {
-            "curPlatform": "pc", 
+            "curPlatform": "ios", 
             "dir_back": "/Users/sjytyf3/Documents/GameResVersions", 
-            "curVersion": "0.0.0.3", 
+            "curVersion": "0.0.0.8", 
             "baseRes": [
                 "and", 
                 "lua/lua_system_injection.unity3d", 
