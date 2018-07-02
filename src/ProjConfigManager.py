@@ -36,8 +36,10 @@ class ProjConfigManager(object) :
 			# f.close()
 
 	def loadConfig(self):
+		# import DKVTools
+		# help(DKVTools.Funcs)
 		f = open(self.path, 'rb')
-		jsonStr = f.read().encode('utf-8')
+		jsonStr = bytes2utf8Str(f.read())
 		f.close()
 
 		self.conf = json.loads(jsonStr, encoding='utf-8')

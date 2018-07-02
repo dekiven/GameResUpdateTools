@@ -46,6 +46,7 @@ key_curVersion = 'curVersion'
 key_curPlatf = 'curPlatform'
 key_projDir = 'dir'
 key_backDir = 'dir_back'
+key_serverDir = 'dir_server'
 key_baseRes = 'baseRes'
 
 def relativeTo(path, root) :
@@ -94,7 +95,7 @@ class AppFrame(ttk.Frame):
 
 		self.columnconfigure(0, weight=1)
 		self.columnconfigure(1, weight=1)
-		# self.rowconfigure(0, weight=1)
+		self.rowconfigure(0, weight=1)
 
 		counter = getCounter()
 
@@ -106,14 +107,20 @@ class AppFrame(ttk.Frame):
 		# 项目路径
 		dirCallback = self.__onProjDirChange
 		projDirWid = GetDirWidget(self, u'项目路径', u'u3d项目路径,Assets父目录。', callback=dirCallback)
-		projDirWid.grid(column=0, row=counter(), padx=5, pady=10)
+		projDirWid.grid(column=0, row=counter(), padx=5, pady=10, sticky='we')
 		self.projDirWid = projDirWid
 
 		# 资源历史版本备份路径
 		dirCallback = self.__onBackDirChange
 		backDirWid = GetDirWidget(self, u'备份路径', u'资源历史版本备份路径。', callback=dirCallback)
-		backDirWid.grid(column=0, row=counter(), padx=5, pady=10)
+		backDirWid.grid(column=0, row=counter(), padx=5, pady=10, sticky='we')
 		self.backDirWid = backDirWid
+
+		# 资源更新服务器路径
+		dirCallback = self.__onServerDirChange
+		serverDirWid = GetDirWidget(self, u'服务器路径', u'资源更新服务器路径', callback=dirCallback)
+		serverDirWid.grid(column=0, row=counter(), padx=5, pady=10, sticky='we')
+		self.serverDirWid = serverDirWid
 
 		# 项目版本管理
 		newVerWid = VersionWidget(self)
@@ -228,6 +235,10 @@ class AppFrame(ttk.Frame):
 	def __onBackDirChange(self, path) :
 		rst = self.confProj.changeProjConfig(self.curProjName, key_backDir, path)
 
+	def __onServerDirChange(self, path) :
+		rst = self.confProj.changeProjConfig(self.curProjName, key_serverDir, path)
+		self.saveConfigs()
+
 	def __onVersionChange(self, v) :
 		self.confProj.changeProjConfig(self.curProjName, key_curVersion, v)
 		# self.saveConfigs()
@@ -253,6 +264,7 @@ class AppFrame(ttk.Frame):
 				# TODO: 生成更新日志和当前文件配置表，复制更改的文件备份并上传
 				for _plat in plat :
 					rPath = self.getBundlePath(_plat)
+					sPath = self.getBServerPath(_plat)
 					res = ResConfigManager(rPath, version)
 					# res.getCurResInfos()
 					# res.saveConfig()
@@ -261,7 +273,10 @@ class AppFrame(ttk.Frame):
 					res.addLog(version, change)
 					res.saveConfig()
 					self.backRes(rPath, pathJoin(bPath, '%s/%s'%(projName, _plat)), version, list(change.keys()))
-				ShowInfoDialog(u'更新版本信息完成！')
+					# ShowInfoDialog(u'更新版本信息完成！')
+				rst = ShowAskDialog('是否将资源更新到服务器？')
+				if rst :
+					self.updateServer(rPath, sPath, version, list(change.keys()))
 			else :
 				ShowInfoDialog(u'版本号没有变更！')
 			self.saveCurProj()
@@ -295,6 +310,13 @@ class AppFrame(ttk.Frame):
 		if pPath is None :
 			return None
 		rPath = pathJoin(pPath, 'AssetBundles/'+platform)
+		return rPath
+
+	def getBServerPath(self, platform) :
+		pPath = self.getProjConfig(key_serverDir)
+		if pPath is None :
+			return None
+		rPath = pathJoin(pPath, platform)
 		return rPath
 
 	def getStreamingPath(self) :
@@ -363,6 +385,7 @@ class AppFrame(ttk.Frame):
 		self.changeProjConfig(key_backDir, self.backDirWid.et.get())
 		self.changeProjConfig(key_curPlatf, self.platCombo.get())
 		self.changeProjConfig(key_curVersion, self.newVerWid.getVersion())
+		self.changeProjConfig(key_serverDir, self.serverDirWid.et.get())
 		# self.changeProjConfig(self.curProjName, key_baseRes, self.fileExplorer.getChoosenFiles())
 		self.saveBaseResConf()
 		self.saveConfigs()
@@ -371,6 +394,7 @@ class AppFrame(ttk.Frame):
 		if self.fileChanges :
 			if ShowAskDialog(u'是否改变包内资源配置？') :
 				self.changeProjConfig(key_baseRes, self.getFiles())
+				self.fileChanges = False;
 			else :
 				files = self.getProjConfig(key_baseRes) or []
 				self.fileExplorer.setChoosenFiles(files)
@@ -385,6 +409,7 @@ class AppFrame(ttk.Frame):
 			self.confProj.setCurProj(name)
 			self.projDirWid.setValue(conf.get(key_projDir) or '')
 			self.backDirWid.setValue(conf.get(key_backDir) or '')
+			self.serverDirWid.setValue(conf.get(key_serverDir) or '')
 			plat = conf.get(key_curPlatf) or 'pc'
 			self.platCombo.set(plat)
 			version = conf.get(key_curVersion) or '0.0.0.0'
@@ -402,6 +427,7 @@ class AppFrame(ttk.Frame):
 		if len(files) == 0 :
 			# print(u'没有资源变动，不打包备份。')
 			return
+		# print(files)
 		zipName = 'v_%s.zip'%(version)
 		if not os.path.isdir(path) :
 			# print(u'资源文件夹"%s"不存在！！！'%(path))
@@ -412,6 +438,7 @@ class AppFrame(ttk.Frame):
 
 		zf = zipfile.ZipFile(pathJoin(outPath, zipName), 'w')
 		# files = list(files.keys())
+		files = list(files)
 		files.append(configFileName)
 		for f in files :
 			p = pathJoin(path, f) 
@@ -419,6 +446,24 @@ class AppFrame(ttk.Frame):
 				zf.write(p, f)
 		zf.close()
 		shutil.copyfile(pathJoin(path, historyFileName), pathJoin(outPath, historyFileName))
+
+	def updateServer(self, path, outPath, version, files) :
+		if len(files) == 0 :
+			# print(u'没有资源变动，不打包备份。')
+			return
+		zipName = 'v_%s.zip'%(version)
+		if not os.path.isdir(path) :
+			# print(u'资源文件夹"%s"不存在！！！'%(path))
+			return
+
+		if not os.path.isdir(outPath) :
+			os.makedirs(outPath)
+			# return
+		files = list(files)
+		files.append(configFileName)
+		# p = pathJoin(path, f)
+		for f in files :
+			shutil.copyfile(pathJoin(path, f), pathJoin(outPath, f))
 
 	def setFiles(self, files) :
 		# buildPlatAll 定义的渠道名是特殊的资源，每个渠道不同，但所有渠道都需要

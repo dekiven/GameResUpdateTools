@@ -175,7 +175,7 @@ class ResConfigManager(object) :
 				# TODO:show log 
 				pass
 		conf = {}
-		conf['version'] = version + '_base'
+		conf['version'] = version + '.base'
 		conf['files'] = _files
 		self.conf = conf
 		self.saveCurVer(configPath)

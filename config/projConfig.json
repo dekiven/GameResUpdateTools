@@ -3,7 +3,8 @@
     "projs": {
         "GameFramework": {
             "curPlatform": "pc", 
-            "curVersion": "0.0.0.2", 
+            "dir_back": "/Users/sjytyf3/Documents/GameResVersions", 
+            "curVersion": "0.0.0.3", 
             "baseRes": [
                 "and", 
                 "lua/lua_system_injection.unity3d", 
@@ -31,8 +32,8 @@
                 "conf/common/res.unity3d", 
                 "lua/lua_system_reflection.unity3d"
             ], 
-            "dir": "/Users/sjytyf3/Documents/U3DProjs/GameFramework", 
-            "dir_back": "/Users/sjytyf3/Documents/GameResVersions"
+            "dir_server": "/Users/sjytyf3/Documents/GameResServer", 
+            "dir": "/Users/sjytyf3/Documents/U3DProjs/GameFramework"
         }
     }
 }
