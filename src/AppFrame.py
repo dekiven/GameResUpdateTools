@@ -421,7 +421,8 @@ class AppFrame(ttk.Frame):
 			pcRes = self.getBundlePath(plat)
 			files = conf.get(key_baseRes) or []
 			self.fileExplorer.clearItems()
-			self.fileExplorer.setPath(pcRes, '.manifest,.DS_Store', files)
+			self.fileExplorer.setPath(pcRes, ('.manifest','.DS_Store'), files)
+			# self.fileExplorer.setPath(pcRes, ('.manifest', ""), files)
 			self.setFiles(files)
 			self.fileChanges = False
 			# self.saveConfigs()		
@@ -451,7 +452,7 @@ class AppFrame(ttk.Frame):
 		shutil.copyfile(pathJoin(path, historyFileName), pathJoin(outPath, historyFileName))
 
 	def updateServer(self, path, outPath, version, files) :
-		print('updateServer', path, outPath, version, files)
+		# print('updateServer', path, outPath, version, files)
 		if len(files) == 0 :
 			# print(u'没有资源变动，不打包备份。')
 			return
@@ -467,6 +468,10 @@ class AppFrame(ttk.Frame):
 		files.append(configFileName)
 		# p = pathJoin(path, f)
 		for f in files :
+			tp = pathJoin(outPath, f)
+			tpdir = os.path.dirname(tp)
+			if not os.path.exists(tpdir) :
+				os.makedirs(tpdir)
 			shutil.copyfile(pathJoin(path, f), pathJoin(outPath, f))
 			# print('copy', pathJoin(path, f), pathJoin(outPath, f))
 
