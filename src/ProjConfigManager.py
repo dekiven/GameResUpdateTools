@@ -46,7 +46,11 @@ class ProjConfigManager(object) :
 
 	def saveConfig(self):
 		# jsonStr = json.dumps(self.conf, sort_keys=True, indent=4, encoding='utf-8')
-		jsonStr = json.dumps(self.conf, indent=4, encoding='utf-8')
+		jsonStr = ''
+		if isPython3() :
+			jsonStr = json.dumps(self.conf, indent=4)
+		else :
+			jsonStr = json.dumps(self.conf, indent=4, encoding='utf-8')
 		f = open(self.path, 'w')
 		f.write(jsonStr)
 		f.close()
