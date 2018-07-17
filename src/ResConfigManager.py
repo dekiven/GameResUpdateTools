@@ -14,6 +14,11 @@ configFileName = 'resConf.bytes'
 historyFileName = 'history.json'
 crcConfExt = '.manifest'
 
+key_version_s = 'versions'
+key_version = 'version'
+key_files = 'files'
+key_log = 'log'
+
 class ResConfigManager(object) :
 	'''ResConfigManager
 	'''
@@ -25,8 +30,8 @@ class ResConfigManager(object) :
 		self.testMode = testMode
 		# 读取的配置
 		# 可修改的配置
-		self.history = {'versions':[], 'log':{}}
-		self.conf = {'version':version, 'files':{}}
+		self.history = {key_version_s:[], key_log:{}}
+		self.conf = {key_version:version, key_files:{}}
 		self.__initPath(path)
 		self.loadConfig()
 		self.pattenCRC = re.compile('^\s*CRC:\s*(\d+)\s*$')
@@ -54,7 +59,7 @@ class ResConfigManager(object) :
 		return pathJoin(self.path, historyFileName)
 
 	def setVersion(self, v) :
-		self.conf['version'] = v
+		self.conf[key_version] = v
 
 	def loadConfig(self):
 		# fp = self.__getCurVerPath()
@@ -85,10 +90,10 @@ class ResConfigManager(object) :
 		fp = path or self.__getCurVerPath()
 		# jsonStr = json.dumps(self.conf, sort_keys=True, indent=4, encoding='utf-8')
 		f = open(fp, 'w')
-		f.write('version|%s\n'%(self.conf['version']))
-		for fn in tuple(self.conf['files'].keys()) :
+		f.write('version|%s\n'%(self.conf[key_version]))
+		for fn in tuple(self.conf[key_files].keys()) :
 			size = os.path.getsize(pathJoin(self.path, fn))
-			f.write('%s|%s|%d\n'%(fn, self.conf['files'][fn], size))
+			f.write('%s|%s|%d\n'%(fn, self.conf[key_files][fn], size))
 		# f.write(jsonStr)
 		f.close()
 
@@ -116,7 +121,7 @@ class ResConfigManager(object) :
 					p = pathJoin(_dir, f)
 					data.append(self.readResInfo(p))
 		files = dict(data)
-		self.conf['files'] = files
+		self.conf[key_files] = files
 		# print(files)
 		return files.copy()
 
@@ -130,9 +135,9 @@ class ResConfigManager(object) :
 
 	def getChangedInfo(self, diffFrom=None) :
 		orifiles = {}
-		for v in self.history['versions'] :
+		for v in self.history[key_version_s] :
 			if diffFrom is None or v != diffFrom :
-				for f,crc in self.history['log'][v].items() :
+				for f,crc in self.history[key_log][v].items() :
 					orifiles[f] = crc
 			else :
 				break
@@ -146,11 +151,11 @@ class ResConfigManager(object) :
 		return files
 
 	def addLog(self, version, files) :
-		versions = self.history['versions']
+		versions = self.history[key_version_s]
 		# 测试模式不记录历史
 		if not version in versions and len(list(files.keys())) > 0 and not self.testMode :
-			self.history['versions'].append(version)
-			self.history['log'][version] = dict(files)
+			self.history[key_version_s].append(version)
+			self.history[key_log][version] = dict(files)
 		self.saveConfig(False, True)
 
 	def saveBaseResConfig(self, files, configPath) :
@@ -175,8 +180,8 @@ class ResConfigManager(object) :
 				# TODO:show log 
 				pass
 		conf = {}
-		conf['version'] = version + '.base'
-		conf['files'] = _files
+		conf[key_version] = version + '.base'
+		conf[key_files] = _files
 		self.conf = conf
 		self.saveCurVer(configPath)
 

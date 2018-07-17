@@ -11,13 +11,16 @@ from DKVTools.Funcs import *
 #reload(sys)
 #sys.setdefaultencoding('utf-8')
 
+key_projs = 'projs'
+key_cur_proj = 'curProj'
+
 class ProjConfigManager(object) :
 	'''ProjConfigManager
 	'''
 	def __init__(self, path) :
 		super(ProjConfigManager, self).__init__()
 		self.path = None
-		self.conf = {'projs':{}, 'curProj':''}
+		self.conf = {key_projs:{}, key_cur_proj:''}
 		self.__initPath(path)
 		self.loadConfig()
 
@@ -57,7 +60,7 @@ class ProjConfigManager(object) :
 
 
 	def getProjConfig(self, pName, key=None):
-		conf =  self.conf["projs"].get(pName)
+		conf =  self.conf[key_projs].get(pName)
 		if key is None :
 			return conf
 		else :
@@ -65,7 +68,7 @@ class ProjConfigManager(object) :
 
 	def addProj(self, pName, data={}):
 		if self.getProjConfig(pName) is None :
-			self.conf["projs"][pName] = data
+			self.conf[key_projs][pName] = data
 
 
 	def changeProjConfig(self, pName, key, value):
@@ -78,15 +81,15 @@ class ProjConfigManager(object) :
 			return False
 
 	def getProjNames(self) :
-		names = list(self.conf["projs"].keys())
+		names = list(self.conf[key_projs].keys())
 		names.sort()
 		return names
 
 	def setCurProj(self, pName) :
-		self.conf['curProj'] = pName
+		self.conf[key_cur_proj] = pName
 
 	def getCurProjName(self) :
-		return self.conf['curProj']
+		return self.conf[key_cur_proj]
 
 def main() :
 	print(ProjConfigManager.__doc__)
