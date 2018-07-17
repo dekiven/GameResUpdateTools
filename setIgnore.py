@@ -4,6 +4,7 @@ from DKVTools.Funcs import *
 ignoreList = [
     '*.pyc',
     'config/',
+    'wheels',
 ]
 
 f = open('.gitignore', 'w')
