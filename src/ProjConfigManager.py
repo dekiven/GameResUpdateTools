@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*- 
+﻿# -*- coding:utf-8 -*- 
 # Date: 2018-03-28 11:27:16
 # Author: dekiven
 
@@ -10,7 +10,6 @@ from DKVTools.Funcs import *
 #import sys 
 #reload(sys)
 #sys.setdefaultencoding('utf-8')
-
 key_projs = 'projs'
 key_cur_proj = 'curProj'
 
@@ -35,7 +34,7 @@ class ProjConfigManager(object) :
 				os.makedirs(pd)
 			self.saveConfig()
 			# f = open(path, 'w')
-			# f.write('{"projs":{}, "curProj":""}')
+			# f.write('{key_projs:{}, "curProj":""}')
 			# f.close()
 
 	def loadConfig(self):

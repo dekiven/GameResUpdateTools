@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*- 
+﻿# -*- coding:utf-8 -*- 
 # Date: 2018-03-29 10:51:32
 # Author: dekiven
 
@@ -7,9 +7,13 @@ import json
 import re
 
 from DKVTools.Funcs import *
-#import sys 
-#reload(sys)
-#sys.setdefaultencoding('utf-8')
+# from __future__ import unicode_literals
+
+if not isPython3() :
+	import sys 
+	reload(sys)
+	sys.setdefaultencoding('utf-8')
+
 configFileName = 'resConf.bytes'
 historyFileName = 'history.json'
 crcConfExt = '.manifest'
@@ -68,10 +72,12 @@ class ResConfigManager(object) :
 		# f.close()
 		# self.conf = json.loads(jsonStr, encoding='utf-8')
 		fp = self.__getHitoryPath()
-		f = open(fp, 'rb')
-		jsonStr = f.read().encode('utf-8')
-		f.close()
-		self.history = json.loads(jsonStr, encoding='utf-8')
+		if os.path.isfile(fp) :
+			f = open(fp, 'rb')
+			jsonStr = bytes2utf8Str(f.read(), 'utf-8')
+			# print(type(jsonStr))
+			f.close()
+			self.history = json.loads(jsonStr, encoding='utf-8')
 
 	def saveConfig(self, cur=True, history=False):
 		if cur :
@@ -81,10 +87,13 @@ class ResConfigManager(object) :
 
 	def saveHistroy(self) :
 		fp = self.__getHitoryPath()
-		jsonStr = json.dumps(self.history, indent=4, encoding='utf-8')
+
+		jsonStr = json.dumps(self.history, indent=4, ensure_ascii= False, encoding='utf-8')
+
 		f = open(fp, 'w')
 		f.write(jsonStr)
 		f.close()
+		
 
 	def saveCurVer(self, path=None):
 		fp = path or self.__getCurVerPath()

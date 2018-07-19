@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*- 
+﻿# -*- coding:utf-8 -*- 
 # Date: 2018-04-03 09:08:22
 # Author: dekiven
 
@@ -40,7 +40,8 @@ objPool = []
 event_cbb = '<<ComboboxSelected>>'
 
 resPlatforms = ('and', 'ios', 'pc',) # 'mac'
-buildPlatAll = ('and', 'ios', 'pc',)
+# 必须打的特殊资源
+buildPlatAll = ('and.unity3d', 'ios.unity3d', 'pc.unity3d',)
 
 key_curVersion = 'curVersion'
 key_curPlatf = 'curPlatform'
@@ -273,7 +274,7 @@ class AppFrame(ttk.Frame):
 				change = res.getChangedInfo()
 				res.addLog(version, change)
 				res.saveConfig()
-				self.backRes(rPath, pathJoin(bPath, '%s/%s'%(projName, _plat)), version, list(change.keys()))
+				self.backRes(rPath, pathJoin(bPath, '%s/%s'%(projName, _plat)), _plat, version, list(change.keys()))
 				# ShowInfoDialog(u'更新版本信息完成！')
 			# rst = ShowAskDialog('是否将资源更新到服务器？')
 				# if rst :
@@ -427,7 +428,7 @@ class AppFrame(ttk.Frame):
 			self.fileChanges = False
 			# self.saveConfigs()		
 
-	def backRes(self, path, outPath, version, files) :
+	def backRes(self, path, outPath, plat, version, files) :
 		if len(files) == 0 :
 			# print(u'没有资源变动，不打包备份。')
 			return
@@ -447,7 +448,7 @@ class AppFrame(ttk.Frame):
 		for f in files :
 			p = pathJoin(path, f) 
 			if os.path.isfile(p) :
-				zf.write(p, f)
+				zf.write(p, pathJoin(plat, f))
 		zf.close()
 		shutil.copyfile(pathJoin(path, historyFileName), pathJoin(outPath, historyFileName))
 
