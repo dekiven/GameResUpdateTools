@@ -254,10 +254,10 @@ class AppFrame(ttk.Frame):
 				ShowInfoDialog(u'项目路径和备份路径不能为空！\n注意：不能包含中文！！！')
 				return
 
-			if plat == 'all' :
-				plat = buildPlatAll
-			else :
-				plat = (plat,)
+			# if plat == 'all' :
+			# 	plat = buildPlatAll
+			# else :
+			# 	plat = (plat,)
 			# print('update "%s" to version:"%s" ...'%(projName, version))
 			# 暂时不检测版本号更新
 			if self.newVerWid.hasVersionChanged() or True:
@@ -271,14 +271,18 @@ class AppFrame(ttk.Frame):
 				# res.saveConfig()
 				# res.addLog('0.0.2', {'f1':'12345',})
 				change = res.getChangedInfo()
-				res.addLog(version, change)
-				res.saveConfig()
-				self.backRes(rPath, pathJoin(bPath, '%s/%s'%(projName, _plat)), version, list(change.keys()))
-				# ShowInfoDialog(u'更新版本信息完成！')
-			# rst = ShowAskDialog('是否将资源更新到服务器？')
-				# if rst :
-				self.updateServer(rPath, sPath, version, list(change.keys()))
-				ShowInfoDialog(u'更新%s版本%s信息完成！'%(version, _plat))
+
+				if len(list(change.files.keys())) > 0 :
+					res.addLog(version, change)
+					res.saveConfig()
+					self.backRes(rPath, pathJoin(bPath, '%s/%s'%(projName, _plat)), version, list(change.keys()))
+					# ShowInfoDialog(u'更新版本信息完成！')
+				# rst = ShowAskDialog('是否将资源更新到服务器？')
+					# if rst :
+					self.updateServer(rPath, sPath, version, list(change.keys()))
+					ShowInfoDialog(u'更新%s版本%s信息完成！'%(version, _plat))
+				else :
+					ShowInfoDialog('没有资源更新\n请检查资源或者重新build Assetbundle')
 
 			else :
 				ShowInfoDialog(u'版本号没有变更！')
