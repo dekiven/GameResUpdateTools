@@ -40,7 +40,7 @@ objPool = []
 event_cbb = '<<ComboboxSelected>>'
 
 resPlatforms = ('and', 'ios', 'pc',) # 'mac'
-buildPlatAll = ('and', 'ios', 'pc',)
+buildPlatAll = ('and.unity3d', 'ios.unity3d', 'pc.unity3d',)
 
 key_curVersion = 'curVersion'
 key_curPlatf = 'curPlatform'
@@ -272,10 +272,10 @@ class AppFrame(ttk.Frame):
 				# res.addLog('0.0.2', {'f1':'12345',})
 				change = res.getChangedInfo()
 
-				if len(list(change.files.keys())) > 0 :
+				if len(list(change.keys())) > 0 :
 					res.addLog(version, change)
 					res.saveConfig()
-					self.backRes(rPath, pathJoin(bPath, '%s/%s'%(projName, _plat)), version, list(change.keys()))
+					self.backRes(rPath, pathJoin(bPath, '%s/%s'%(projName, _plat)), _plat, version, list(change.keys()))
 					# ShowInfoDialog(u'更新版本信息完成！')
 				# rst = ShowAskDialog('是否将资源更新到服务器？')
 					# if rst :
@@ -309,7 +309,7 @@ class AppFrame(ttk.Frame):
 		# print(self.getFiles())
 		res = ResConfigManager(aPath)
 		res.saveBaseResConfig(self.getFiles(), pathJoin(sPath, 'resConf.bytes'))
-		ShowInfoDialog(u'平台:"%s"\n版本:"%s"\n资源拷贝完成,可以使用U3D Editor打包。'%(plat, version+'_base'))
+		ShowInfoDialog(u'平台:"%s"\n版本:"%s"\n资源拷贝完成,可以使用U3D Editor打包。'%(plat, version+'.base'))
 
 
 	def getBundlePath(self, platform) :
@@ -431,12 +431,12 @@ class AppFrame(ttk.Frame):
 			self.fileChanges = False
 			# self.saveConfigs()		
 
-	def backRes(self, path, outPath, version, files) :
+	def backRes(self, path, outPath, plat, version, files) :
 		if len(files) == 0 :
 			# print(u'没有资源变动，不打包备份。')
 			return
 		# print(files)
-		zipName = 'v_%s.zip'%(version)
+		zipName = '%s_v_%s.zip'%(plat, version)
 		if not os.path.isdir(path) :
 			# print(u'资源文件夹"%s"不存在！！！'%(path))
 			return
@@ -451,7 +451,7 @@ class AppFrame(ttk.Frame):
 		for f in files :
 			p = pathJoin(path, f) 
 			if os.path.isfile(p) :
-				zf.write(p, f)
+				zf.write(p, pathJoin(plat, f))
 		zf.close()
 		shutil.copyfile(pathJoin(path, historyFileName), pathJoin(outPath, historyFileName))
 
