@@ -9,6 +9,8 @@ import shutil
 from DKVTools.Funcs import *
 from TkToolsD.CommonWidgets import *
 from TkToolsD.MultiFileChooser import MultiFileChooser
+from TkToolsD.CommonWidgets import regEnterTip
+from TkToolsD.VersionWidget import VersionWidget
 
 
 if isPython3() :
@@ -19,15 +21,11 @@ else :
 	import  ttk
 
 try:
-	from EnterTipLabel import regEnterTip
-	from VersionWidget import VersionWidget
 	from ProjConfigManager import ProjConfigManager
 	from ResConfigManager import ResConfigManager
 	from ResConfigManager import configFileName
 	from ResConfigManager import historyFileName
 except Exception as e:
-	from .EnterTipLabel import regEnterTip
-	from .VersionWidget import VersionWidget
 	from .ProjConfigManager import ProjConfigManager
 	from .ResConfigManager import ResConfigManager
 	from .ResConfigManager import configFileName
@@ -125,6 +123,7 @@ class AppFrame(ttk.Frame):
 		# 项目版本管理
 		newVerWid = VersionWidget(self)
 		newVerWid.setVersionLen(4)
+		newVerWid.setSubMaxVerLen(2)
 		newVerWid.setCallback(self.__onVersionChange)
 		newVerWid.grid(column=0, row=counter(), padx=5, pady=10)
 		self.newVerWid = newVerWid
@@ -171,7 +170,7 @@ class AppFrame(ttk.Frame):
 		btn = ttk.Button(lf, text=u'保存配置', command=self.saveCurProj)
 		btn.grid(column=2, row=0)
 
-		mfc = MultiFileChooser(self, height=100)
+		mfc = MultiFileChooser(self)
 		mfcRow = counter()
 		self.rowconfigure(mfcRow, weight=1)
 		mfc.grid(column=1, row=0, rowspan=mfcRow+1, padx=5, pady=10, sticky='nswe')
@@ -244,7 +243,7 @@ class AppFrame(ttk.Frame):
 		# self.saveConfigs()
 
 	def __onUpdateBtn(self, plat='all') :
-		if ShowAskDialog(u'更新资源版本信息之前，请确\n认全部平台的资源都已经是最新！\n=====点确定继续。=====') :
+		if ShowAskDialog(u'更新资源版本信息之前，请确认\n全部平台的资源都已经是最新！\n=====点确定继续。=====') :
 			version = self.getProjConfig(key_curVersion)
 			# plat = self.getProjConfig(key_curPlatf)
 			pPath = self.getProjConfig(key_projDir)
@@ -486,3 +485,12 @@ class AppFrame(ttk.Frame):
 	def getFiles(self) :
 		# buildPlatAll 定义的渠道名是特殊的资源，每个渠道不同，但所有渠道都需要
 		return list(set(self.choosenFiles) | set(buildPlatAll))
+
+	def clearCurProj(self) :
+		return
+		# TODO:清空历史资源等
+		self.newVerWid.setVertion('0.0.0.1')
+		self.newVerWid.setCurVersion('0.0.0.0')
+		self.saveCurProj()
+		self.selectAProj(self.projCombo.get())
+

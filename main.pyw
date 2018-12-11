@@ -4,6 +4,7 @@
 
 from src.AppFrame import AppFrame 
 from DKVTools.Funcs import *
+from TkToolsD.CommonWidgets import *
 if isPython3() :
 	import tkinter as tk  
 	from tkinter import ttk 	
@@ -18,6 +19,8 @@ def initUI() :
 	app = AppFrame(root)
 	app.loadConfigs('config/projConfig.json')
 	app.pack(fill=tk.BOTH, expand=True)
+	centerToplevel(app)
+	app.focus_set()
 	root.mainloop()
 
 def main() :
