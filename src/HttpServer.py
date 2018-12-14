@@ -1,0 +1,62 @@
+# -*- coding:utf-8 -*-
+# 创建时间：2018-12-14 14:51:35
+# 创建人：  Dekiven
+
+import os
+import SimpleHTTPServer
+import SocketServer
+import socket
+
+def getLocalIp() :
+    # 获取本机计算机名称
+    hostname = socket.gethostname()
+    # 获取本机ip
+    ip = socket.gethostbyname(hostname)
+    # print(ip)
+    return ip
+
+class HttpServer(object):
+    """docstring for HttpServer"""
+    def __init__(self):
+        super(HttpServer, self).__init__()
+        self.serverInstance = None
+        
+
+    def startServer(self, srcDir, port) :
+        '''根据传入的文件夹路径和端口号创建http服务器'''
+        self.stopServer()
+
+        if os.path.isdir(srcDir) :
+            curDir = os.getcwd()
+            os.chdir(srcDir)
+            Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+
+            httpd = SocketServer.TCPServer(('', port), Handler)
+
+            self.serverInstance = httpd
+
+            httpd.serve_forever()
+            os.chdir(curDir)
+
+
+    def stopServer(self) :
+        if self.serverInstance is not None :
+            # print('stopServer')
+            self.serverInstance.shutdown()
+
+def __main() :
+    import threading
+    import time
+
+    http = HttpServer()
+
+    def threadFunc () :
+        time.sleep(20)
+        http.stopServer()
+    threading.Thread(target=threadFunc).start()
+
+    http.startServer(os.getcwd(), 8000)
+    
+
+if __name__ == '__main__' :
+    __main()

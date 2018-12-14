@@ -37,7 +37,7 @@ except Exception as e:
 objPool = []
 event_cbb = '<<ComboboxSelected>>'
 
-resPlatforms = ('and', 'ios', 'pc',) # 'mac'
+resPlatforms = ('and', 'ios', 'pc', 'mac',)
 buildPlatAll = ('and.unity3d', 'ios.unity3d', 'pc.unity3d',)
 
 key_curVersion = 'curVersion'
