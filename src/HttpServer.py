@@ -44,18 +44,44 @@ class HttpServer(object):
             # print('stopServer')
             self.serverInstance.shutdown()
 
+def command() :
+    import sys
+    import getopt
+    argv = sys.argv[1:]
+
+    dirPath = ''
+    port = 8000
+
+    try:
+        opts, args = getopt.getopt(argv,"d:p:",["dir=","port="])
+    except getopt.GetoptError:
+        print (u'获取参数错误')
+        input(u'按任意键退出')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ('-d', '--dir') :
+            dirPath = arg
+        if opt in ('-p', '--port') :
+            port = int(arg)
+    # print(dirPath, port)
+    if dirPath != '' and os.path.isdir(dirPath) and port > 0 :
+        http = HttpServer()
+        http.startServer(dirPath, port)
+        print(u'参数不正确')
+
 def __main() :
-    import threading
-    import time
+    # import threading
+    # import time
 
-    http = HttpServer()
+    # http = HttpServer()
 
-    def threadFunc () :
-        time.sleep(20)
-        http.stopServer()
-    threading.Thread(target=threadFunc).start()
+    # def threadFunc () :
+    #     time.sleep(20)
+    #     http.stopServer()
+    # threading.Thread(target=threadFunc).start()
 
-    http.startServer(os.getcwd(), 8000)
+    # http.startServer(os.getcwd(), 8000)
+    command()
     
 
 if __name__ == '__main__' :
