@@ -38,7 +38,7 @@ objPool = []
 event_cbb = '<<ComboboxSelected>>'
 
 resPlatforms = ('and', 'ios', 'pc', 'mac',)
-buildPlatAll = ('and.unity3d', 'ios.unity3d', 'pc.unity3d',)
+buildPlatAll = ('and.unity3d', 'ios.unity3d', 'pc.unity3d', 'resConf.bytes', 'resConf.bytes', 'baselanguage.unity3d')
 
 key_curVersion = 'curVersion'
 key_curPlatf = 'curPlatform'
@@ -424,7 +424,7 @@ class AppFrame(ttk.Frame):
 			pcRes = self.getBundlePath(plat)
 			files = conf.get(key_baseRes) or []
 			self.fileExplorer.clearItems()
-			self.fileExplorer.setPath(pcRes, ('.manifest','.DS_Store'), files)
+			self.fileExplorer.setPath(pcRes, ('.manifest','.DS_Store', '.json'), files)
 			# self.fileExplorer.setPath(pcRes, ('.manifest', ""), files)
 			self.setFiles(files)
 			self.fileChanges = False

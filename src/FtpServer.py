@@ -103,7 +103,7 @@ def __main() :
     # print(type(FTPServer.close))
     ser = FtpServer()
     # mac In unix (Linux, Mac OS X, BSD etc) systems, ports less than 1024 can not be bound to by normal users, only the root user can bind to those ports.
-    ser.initServer('/Users/sjytyf3/Desktop/ftp', port=2121)
+    ser.initServer('C:/Users/Dekiven/Desktop/fp', ip='192.168.199.137', port=21)
     ser.start()
 
 

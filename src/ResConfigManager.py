@@ -66,12 +66,12 @@ class ResConfigManager(object) :
 		# f = open(fp, 'rb')
 		# jsonStr = f.read().encode('utf-8')
 		# f.close()
-		# self.conf = json.loads(jsonStr, encoding='utf-8')
+		# self.conf = jsonLoads(jsonStr, encoding='utf-8')
 		fp = self.__getHitoryPath()
 		f = open(fp, 'rb')
-		jsonStr = f.read().encode('utf-8')
+		jsonStr = bytes2utf8Str(f.read())
 		f.close()
-		self.history = json.loads(jsonStr, encoding='utf-8')
+		self.history = jsonLoads(jsonStr, encoding='utf-8')
 
 	def saveConfig(self, cur=True, history=False):
 		if cur :
@@ -81,14 +81,14 @@ class ResConfigManager(object) :
 
 	def saveHistroy(self) :
 		fp = self.__getHitoryPath()
-		jsonStr = json.dumps(self.history, indent=4, encoding='utf-8')
+		jsonStr = jsonDumps(self.history, indent=4, encoding='utf-8')
 		f = open(fp, 'w')
 		f.write(jsonStr)
 		f.close()
 
 	def saveCurVer(self, path=None):
 		fp = path or self.__getCurVerPath()
-		# jsonStr = json.dumps(self.conf, sort_keys=True, indent=4, encoding='utf-8')
+		# jsonStr = jsonDumps(self.conf, sort_keys=True, indent=4, encoding='utf-8')
 		f = open(fp, 'w')
 		f.write('version|%s\n'%(self.conf[key_version]))
 		for fn in tuple(self.conf[key_files].keys()) :
@@ -103,7 +103,7 @@ class ResConfigManager(object) :
 		# content = r.read().encode('utf-8')
 		f.close()
 
-		l = lines[1].encode('utf-8')
+		l = bytes2utf8Str(lines[1])
 		m = self.pattenCRC.match(l)
 		if m :
 			crc = m.group(1)
