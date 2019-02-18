@@ -38,7 +38,7 @@ objPool = []
 event_cbb = '<<ComboboxSelected>>'
 
 resPlatforms = ('and', 'ios', 'pc', 'mac',)
-buildPlatAll = ('and.unity3d', 'ios.unity3d', 'pc.unity3d', 'resConf.bytes', 'resConf.bytes', 'baselanguage.unity3d')
+buildPlatAll = ('and.unity3d', 'ios.unity3d', 'pc.unity3d', 'resConf.bytes', 'servConf.bytes', 'baselanguage.unity3d')
 
 key_curVersion = 'curVersion'
 key_curPlatf = 'curPlatform'
