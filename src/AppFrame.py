@@ -38,7 +38,13 @@ objPool = []
 event_cbb = '<<ComboboxSelected>>'
 
 resPlatforms = ('and', 'ios', 'pc', 'mac',)
-buildPlatAll = ('and.unity3d', 'ios.unity3d', 'pc.unity3d', 'resConf.bytes', 'servConf.bytes', 'baselanguage.unity3d')
+buildPlatAll = [ 
+	'resConf.bytes', 
+	# 'servConf.bytes', 
+	'baselanguage.unity3d', 
+	'updateserver.unity3d'
+]
+buildPlatAll = buildPlatAll + [p+'.unity3d' for p in resPlatforms]
 
 key_curVersion = 'curVersion'
 key_curPlatf = 'curPlatform'
@@ -368,6 +374,8 @@ class AppFrame(ttk.Frame):
 			pcRes = self.getBundlePath(plat)
 			self.fileChanges = True
 			self.setFiles([relativeTo(f, pcRes) for f in files])
+			self.fileExplorer.setChoosenFiles(self.getFiles())
+
 
 	def loadConfigs(self, confPath=None) :
 		confPath = confPath or self.confPath
@@ -403,7 +411,7 @@ class AppFrame(ttk.Frame):
 				self.fileChanges = False;
 			else :
 				files = self.getProjConfig(key_baseRes) or []
-				self.fileExplorer.setChoosenFiles(files)
+				self.fileExplorer.setChoosenFiles(self.getFiles(files))
 				self.setFiles(files)
 		self.saveConfigs()
 
@@ -424,7 +432,7 @@ class AppFrame(ttk.Frame):
 			pcRes = self.getBundlePath(plat)
 			files = conf.get(key_baseRes) or []
 			self.fileExplorer.clearItems()
-			self.fileExplorer.setPath(pcRes, ('.manifest','.DS_Store', '.json'), files)
+			self.fileExplorer.setPath(pcRes, ('.manifest','.DS_Store', '.json'), self.getFiles(files))
 			# self.fileExplorer.setPath(pcRes, ('.manifest', ""), files)
 			self.setFiles(files)
 			self.fileChanges = False
@@ -482,9 +490,10 @@ class AppFrame(ttk.Frame):
 		# buildPlatAll 定义的渠道名是特殊的资源，每个渠道不同，但所有渠道都需要
 		self.choosenFiles = list(set(files) | set(buildPlatAll))
 
-	def getFiles(self) :
+	def getFiles(self, files=None) :
 		# buildPlatAll 定义的渠道名是特殊的资源，每个渠道不同，但所有渠道都需要
-		return list(set(self.choosenFiles) | set(buildPlatAll))
+		files = files or self.choosenFiles
+		return list(set(files) | set(buildPlatAll))
 
 	def clearCurProj(self) :
 		return
