@@ -5,12 +5,8 @@
 from src.AppFrame import AppFrame 
 from DKVTools.Funcs import *
 from TkToolsD.CommonWidgets import *
-if isPython3() :
-	import tkinter as tk  
-	from tkinter import ttk 	
-else :
-	import Tkinter as tk  
-	import  ttk
+
+tk, ttk = getTk()
 
 def initUI() :
 	root = tk.Tk()

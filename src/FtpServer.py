@@ -67,7 +67,7 @@ class FtpServer(object) :
             handler.passive_ports = pp
 
         # Instantiate FTP server class and listen on 0.0.0.0:21
-        address = (getArg('ip', ''), getArg('port', 2121))
+        address = (getArg('ip', ''), getArg('port', 21))
         server = FTPServer(address, handler)
 
         # set a limit for connections
@@ -81,6 +81,7 @@ class FtpServer(object) :
             # Define a new user having full r/w permissions and a read-only
             # anonymous user
             # add_user(username,password,homedir,perm=”elr”,msg_login=”Login successful.”, msg_quit=”Goodbye.”)
+            os.chdir(srcDir)
             authorizer.add_user('user', '12345', '.', perm='elradfmwM')
             authorizer.add_anonymous(srcDir)
             return True
@@ -103,7 +104,8 @@ def __main() :
     # print(type(FTPServer.close))
     ser = FtpServer()
     # mac In unix (Linux, Mac OS X, BSD etc) systems, ports less than 1024 can not be bound to by normal users, only the root user can bind to those ports.
-    ser.initServer('C:/Users/Dekiven/Desktop/fp', ip='192.168.199.137', port=21)
+    # ser.initServer('C:/Users/Dekiven/Desktop/fp', ip='192.168.199.137', port=2121)
+    ser.initServer('/Users/sjytyf3/Desktop', ip='192.168.70.144', port=2121)
     ser.start()
 
 

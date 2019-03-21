@@ -51,6 +51,7 @@ key_curPlatf = 'curPlatform'
 key_projDir = 'dir'
 key_backDir = 'dir_back'
 key_serverDir = 'dir_server'
+key_asbDir = 'dir_asb'
 key_baseRes = 'baseRes'
 
 def relativeTo(path, root) :
@@ -113,6 +114,12 @@ class AppFrame(ttk.Frame):
 		projDirWid = GetDirWidget(self, u'项目路径', u'u3d项目路径,Assets父目录。', callback=dirCallback)
 		projDirWid.grid(column=0, row=counter(), padx=5, pady=10, sticky='we')
 		self.projDirWid = projDirWid
+
+		# 项目导出 asb 路径
+		dirCallback = self.__onProjAsbDirChange
+		projAsbDirWid = GetDirWidget(self, u'Asb路径', u'项目导出 asb 路径,默认是：项目路径/AssetBundles', callback=dirCallback)
+		projAsbDirWid.grid(column=0, row=counter(), padx=5, pady=10, sticky='we')
+		self.projAsbDirWid = projAsbDirWid
 
 		# 资源历史版本备份路径
 		dirCallback = self.__onBackDirChange
@@ -237,6 +244,9 @@ class AppFrame(ttk.Frame):
 		rst = self.confProj.changeProjConfig(self.curProjName, key_projDir, path)
 		# self.saveConfigs()
 
+	def __onProjAsbDirChange(self, path) :
+		rst = self.confProj.changeProjConfig(self.curProjName, key_asbDir, path)
+
 	def __onBackDirChange(self, path) :
 		rst = self.confProj.changeProjConfig(self.curProjName, key_backDir, path)
 
@@ -318,10 +328,16 @@ class AppFrame(ttk.Frame):
 
 
 	def getBundlePath(self, platform) :
-		pPath = self.getProjConfig(key_projDir)
-		if pPath is None :
-			return None
-		rPath = pathJoin(pPath, 'AssetBundles/'+platform)
+		# or '' 旧版本适配
+		rPath = self.getProjConfig(key_asbDir) or ''
+		if rPath == '' :
+			pPath = self.getProjConfig(key_projDir)
+			if pPath is None :
+				return None
+			rPath = pathJoin(pPath, 'AssetBundles')
+			self.projAsbDirWid.setValue(rPath)
+			self.confProj.changeProjConfig(self.curProjName, key_asbDir, rPath)
+		rPath = pathJoin(rPath, platform)
 		return rPath
 
 	def getBServerPath(self, platform) :
@@ -354,7 +370,8 @@ class AppFrame(ttk.Frame):
 				"curVersion": "0.0.0.0", 
 				"baseRes": [], 
 				"dir": "", 
-				"dir_back": ""
+				"dir_back": "",
+				"dir_asb": ""
 			})
 			# self.saveConfigs()
 			self.setFiles([])
@@ -424,6 +441,7 @@ class AppFrame(ttk.Frame):
 			self.projDirWid.setValue(conf.get(key_projDir) or '')
 			self.backDirWid.setValue(conf.get(key_backDir) or '')
 			self.serverDirWid.setValue(conf.get(key_serverDir) or '')
+			self.projAsbDirWid.setValue(conf.get(key_asbDir) or '')
 			plat = conf.get(key_curPlatf) or 'pc'
 			self.platCombo.set(plat)
 			version = conf.get(key_curVersion) or '0.0.0.0'
