@@ -157,7 +157,7 @@ fileSize 仅对文件有效，文件夹数据不正确
         if size == 0 :
             callback(1)   
 
-    def uploadDir(self, dirPath, ftpPath, callback=None, threadNum=4) :
+    def uploadDir(self, dirPath, ftpPath, callback=None, threadNum=4, isDaemon=False) :
         if not os.path.isdir(dirPath) :
             print('can not upload dir, dirPath :"%s" do not exist!!'%dirPath)
             return
@@ -182,7 +182,7 @@ fileSize 仅对文件有效，文件夹数据不正确
         self.uploadFiles(filePaths, fNames, callback=callback, threadNum=threadNum)
 
 
-    def uploadFiles(self, filePaths, fNames, callback=None, threadNum=4, newDirs=None) :
+    def uploadFiles(self, filePaths, fNames, callback=None, threadNum=4, newDirs=None, isDaemon=False) :
         if newDirs is None :
             newDirs = []
             for f in fNames :
@@ -194,9 +194,9 @@ fileSize 仅对文件有效，文件夹数据不正确
         for d in newDirs :
             self.tryMkd(d)
 
-        self.__startThread(filePaths, fNames, True, callback=callback, threadNum=threadNum)
+        self.__startThread(filePaths, fNames, True, callback=callback, threadNum=threadNum, isDaemon=isDaemon)
 
-    def downloadDir(self, ftpPath, savePath, callback=None, threadNum=4) :
+    def downloadDir(self, ftpPath, savePath, callback=None, threadNum=4, isDaemon=False) :
         ftpPaths = []
         savePaths = []
         savePath = savePath.rstrip('/')
@@ -208,8 +208,8 @@ fileSize 仅对文件有效，文件夹数据不正确
 
         self.downloadFiles(ftpPaths, savePaths, callback=callback, threadNum=threadNum)
 
-    def downloadFiles(self, ftpPaths, savePaths, callback=None, threadNum=4) :
-        self.__startThread(ftpPaths, savePaths, False, callback=callback, threadNum=threadNum)
+    def downloadFiles(self, ftpPaths, savePaths, callback=None, threadNum=4, isDaemon=False) :
+        self.__startThread(ftpPaths, savePaths, False, callback=callback, threadNum=threadNum, isDaemon=isDaemon)
 
     def __getMove2Next(self, arg1, arg2) :
 
@@ -228,7 +228,7 @@ fileSize 仅对文件有效，文件夹数据不正确
 
         return move2Next
 
-    def __startThread(self, arg1, arg2, isUp, callback=None, threadNum=4) :
+    def __startThread(self, arg1, arg2, isUp, callback=None, threadNum=4, isDaemon=False) :
         move2Next = self.__getMove2Next(arg1, arg2)
 
         def downloadThread() :
@@ -268,6 +268,7 @@ fileSize 仅对文件有效，文件夹数据不正确
 
         for i in range(threadNum) :
             t = threading.Thread(target=downloadThread)
+            t.setDaemon(isDaemon)
             t.start()
         # downloadThread()
 
