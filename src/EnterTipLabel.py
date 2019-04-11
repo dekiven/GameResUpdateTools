@@ -7,13 +7,7 @@ import os
 from DKVTools.Funcs import *
 from TkToolsD.CommonWidgets import *
 
-if isPython3() :
-	import tkinter as tk
-	from tkinter import ttk 
-
-else :
-	import Tkinter as tk
-	import ttk
+tk, ttk = getTk()
 
 class __ToolTip(object):
 	def __init__(self, widget):

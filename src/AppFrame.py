@@ -13,12 +13,7 @@ from TkToolsD.CommonWidgets import regEnterTip
 from TkToolsD.VersionWidget import VersionWidget
 
 
-if isPython3() :
-    import tkinter as tk  
-    from tkinter import ttk     
-else :
-    import Tkinter as tk  
-    import  ttk
+tk, ttk = getTk()
 
 try:
     from ProjConfigManager import ProjConfigManager

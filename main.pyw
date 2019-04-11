@@ -11,7 +11,6 @@ tk, ttk = getTk()
 def initUI() :
 	root = tk.Tk()
 
-
 	app = AppFrame(root)
 	app.loadConfigs('config/projConfig.json')
 	app.pack(fill=tk.BOTH, expand=True)
