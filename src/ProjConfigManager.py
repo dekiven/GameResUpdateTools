@@ -7,9 +7,6 @@ import json
 
 from DKVTools.Funcs import *
 
-#import sys 
-#reload(sys)
-#sys.setdefaultencoding('utf-8')
 
 key_projs = 'projs'
 key_cur_proj = 'curProj'

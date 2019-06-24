@@ -8,39 +8,33 @@ import shutil
 
 from DKVTools.Funcs import *
 from TkToolsD.CommonWidgets import *
-from TkToolsD.MultiFileChooser import MultiFileChooser
 from TkToolsD.CommonWidgets import regEnterTip
 from TkToolsD.VersionWidget import VersionWidget
 
 
 tk, ttk = getTk()
 
-try:
-    from ProjConfigManager import ProjConfigManager
-    from ResConfigManager import ResConfigManager
-    from ResConfigManager import configFileName
-    from ResConfigManager import historyFileName
-    from ConfigEditWindow import ConfigEditWindow
-except Exception as e:
-    from .ProjConfigManager import ProjConfigManager
-    from .ResConfigManager import ResConfigManager
-    from .ResConfigManager import configFileName
-    from .ResConfigManager import historyFileName
-    from .ConfigEditWindow import ConfigEditWindow
+from ProjConfigManager import ProjConfigManager
+from ResConfigManager import ResConfigManager
+from ResConfigManager import historyFileName
+from ConfigEditWindow import ConfigEditWindow
+from AsbPackageWindow import AsbPackageWindow
+from ResExplorer import ResExplorer
 
-#import sys 
-#reload(sys)
-#sys.setdefaultencoding('utf-8')
 objPool = []
 event_cbb = '<<ComboboxSelected>>'
 
+STR_EXT = '.unity3d'
+
 resPlatforms = ('and', 'ios', 'pc', 'mac',)
 buildPlatAll = [ 
-    'resConf.bytes', 
-    'baselanguage.unity3d', 
-    'updateserver.unity3d'
+    # 'version', 
+    'baselanguage'+STR_EXT, 
+    'updateserver'+STR_EXT,
 ]
-buildPlatAll = buildPlatAll + [p+'.unity3d' for p in resPlatforms]
+buildPlatAll = buildPlatAll + [p+STR_EXT for p in resPlatforms]
+
+skipPatterns = (r'.*\.manifest', r'.*\.DS_Store', r'.*\.json', 'version', r'.*\.bytes')
 
 key_curVersion = 'curVersion'
 key_curPlatf = 'curPlatform'
@@ -50,8 +44,10 @@ key_serverDir = 'dir_server'
 key_asbDir = 'dir_asb'
 key_baseRes = 'baseRes'
 key_servConf = 'servConf'
+key_packageConf = 'asbPackages'
 
 STR_F_SERV_CONFIG = 'servConf.bytes'
+STR_F_PKG_CONFIG = 'asbPackages.bytes'
 
 def relativeTo(path, root) :
     path = path.replace('\\', '/')
@@ -62,7 +58,7 @@ def relativeTo(path, root) :
 def copyFilesTo(src, target, files) :
     if os.path.isdir(src) :
         for f in files :
-            rf = f
+            rf = f.split(':')[0]
             if not os.path.isabs(f) :
                 f = pathJoin(src, f)
             else :
@@ -93,6 +89,7 @@ class AppFrame(ttk.Frame):
         self.baseResWid = None   #配置基础资源暂时先不考虑实现
         self.newProEntry = None
         self.fileExplorer = None
+        self.packageFiles = {}
 
         self.fileChanges = False
         self.setFiles([])
@@ -146,8 +143,11 @@ class AppFrame(ttk.Frame):
         lf.columnconfigure(0, weight=1)
         lf.grid(column=0, row=counter(), padx=5, pady=5, sticky='nswe')
 
-        btn = ttk.Button(lf, text=u'配置', command=self.__onClickConfig)
+        btn = ttk.Button(lf, text=u'服务器配置', command=self.__onClickConfig)
         btn.grid(column=1, row=0)
+
+        btn = ttk.Button(lf, text=u'asb分包配置', command=self.__onClickPkgConfig)
+        btn.grid(column=0, row=0)
 
         # ==========================平台配置 end===============================
 
@@ -194,7 +194,7 @@ class AppFrame(ttk.Frame):
         btn = ttk.Button(lf, text=u'保存配置', command=self.saveCurProj)
         btn.grid(column=2, row=0)
 
-        mfc = MultiFileChooser(self)
+        mfc = ResExplorer(self)
         mfcRow = counter()
         self.rowconfigure(mfcRow, weight=1)
         mfc.grid(column=1, row=0, rowspan=mfcRow+1, padx=5, pady=5, sticky='nswe')
@@ -269,8 +269,8 @@ class AppFrame(ttk.Frame):
         self.confProj.changeProjConfig(self.curProjName, key_curVersion, v)
         # self.saveConfigs()
 
-    def __onUpdateBtn(self, plat='all') :
-        if ShowAskDialog(u'更新资源版本信息之前，请确认\n全部平台的资源都已经是最新！\n=====点确定继续。=====') :
+    def __onUpdateBtn(self) :
+        if ShowAskDialog(u'更新资源版本信息之前，请确认\n当前平台的资源已经是最新！\n=====点确定继续。=====') :
             version = self.getProjConfig(key_curVersion)
             # plat = self.getProjConfig(key_curPlatf)
             pPath = self.getProjConfig(key_projDir)
@@ -292,20 +292,29 @@ class AppFrame(ttk.Frame):
                 _plat = self.platCombo.get()
                 rPath = self.getBundlePath(_plat)
                 sPath = self.getBServerPath(_plat)
-                res = ResConfigManager(rPath, version)
+                res = ResConfigManager(rPath, version, packages=self.__getCurPackageConf())
                 # res.getCurResInfos()
                 # res.saveConfig()
                 # res.addLog('0.0.2', {'f1':'12345',})
-                change = res.getChangedInfo()
-
+                change, pkgs = res.getChangedInfo()
                 if len(list(change.keys())) > 0 :
+                    # 添加历史信息
                     res.addLog(version, change)
+                    # 保存 bytes 文件
                     res.saveConfig()
-                    self.backRes(rPath, pathJoin(bPath, '%s/%s'%(projName, _plat)), _plat, version, list(change.keys()))
-                    # ShowInfoDialog(u'更新版本信息完成！')
-                # rst = ShowAskDialog('是否将资源更新到服务器？')
-                    # if rst :
-                    self.updateServer(rPath, sPath, version, list(change.keys()))
+                    change = list(change.keys())
+                    change += pkgs
+                    # 增量备份并 zip 
+                    self.backRes(
+                        rPath, 
+                        pathJoin(bPath, '%s/%s'%(projName, _plat)), 
+                        _plat, 
+                        version, 
+                        change, 
+                        res.getHistoryPath()
+                    )
+                    # 增量将修改文件复制到本地资源服路径
+                    self.updateServer(rPath, sPath, version, change)
                     ShowInfoDialog(u'更新%s版本%s信息完成！'%(version, _plat))
                 else :
                     ShowInfoDialog('没有资源更新\n请检查资源或者重新build Assetbundle')
@@ -323,19 +332,13 @@ class AppFrame(ttk.Frame):
 
         sPath = self.getStreamingPath()
         if os.path.isdir(sPath) :
-            try:
-                shutil.rmtree(sPath)
-            except Exception as e:
-                # print(e)
-                ShowInfoDialog(u'删除原有文件失败\n，请检查文件权限或者是否被占用！')
-                return
+            removeTree(sPath)
         sPath = pathJoin(sPath, plat)
         aPath = self.getBundlePath(plat)
         copyFilesTo(aPath, sPath, self.getFiles())
-        # print(self.getFiles())
-        res = ResConfigManager(aPath)
-        res.saveBaseResConfig(self.getFiles(), pathJoin(sPath, 'resConf.bytes'))
-        ShowInfoDialog(u'平台:"%s"\n版本:"%s"\n资源拷贝完成,可以使用U3D Editor打包。'%(plat, version+'.base'))
+        res = ResConfigManager(aPath, packages=self.__getCurPackageConf())
+        if res.saveBaseResConfig(self.getFiles(), sPath) :
+            ShowInfoDialog(u'平台:"%s"\n版本:"%s"\n资源拷贝完成,可以使用U3D Editor打包。'%(plat, version+'.base'))
 
     def __onClickConfig(self):
         ce = ConfigEditWindow(self)
@@ -366,6 +369,38 @@ class AppFrame(ttk.Frame):
                 f.write('%s|%s\n'%(k, str(data.get(k)[1])))
             # TODO:
             f.close()
+
+    def __onClickPkgConfig(self):
+        ce = AsbPackageWindow(self)
+        conf = self.getProjConfig(key_packageConf)
+        if conf is None :
+            self.changeProjConfig(key_packageConf, {})
+        ce.setCallback(self.__onPkgConfChanged)
+        ce.setData( conf or {})
+        centerToplevel(ce)
+        root = getToplevel(self)
+        root.wait_window(ce)
+
+    def __onPkgConfChanged(self, data) :
+        # conf = self.getProjConfig(key_packageConf) or {}
+        # conf[key] = data
+        self.changeProjConfig(key_packageConf, data)
+        self.__savePkgConfig(data)
+        self.saveCurProj()
+        self.freshUI()
+
+    def __savePkgConfig(self, data) :
+        # TODO:保存到根目录并刷新文件浏览器
+        # if key in resPlatforms :
+        pPath = self.getProjConfig(key_asbDir)
+        # pPath = pathJoin(asbDir, key)
+        if not os.path.isdir(pPath) :
+            os.makedirs(pPath)
+        f = open(pathJoin(pPath, STR_F_PKG_CONFIG), 'w')
+        for k in tuple(data.keys()) :
+            f.write('%s|%s\n'%(k, str(data.get(k)[1])))
+        # TODO:
+        f.close()
 
 
     def getBundlePath(self, platform) :
@@ -434,6 +469,16 @@ class AppFrame(ttk.Frame):
             self.setFiles([relativeTo(f, pcRes) for f in files])
             self.fileExplorer.setChoosenFiles(self.getFiles())
 
+    def __getCurPackageConf(self) :
+        '''获取当前项目的 asb 资源包配置
+        '''
+        data = self.getProjConfig(key_packageConf) or {}
+        conf = {}
+        for k in tuple(data.keys()) :
+            d = data.get(k)
+            conf[k] = d[1]  
+        return conf
+
 
     def loadConfigs(self, confPath=None) :
         confPath = confPath or self.confPath
@@ -491,13 +536,19 @@ class AppFrame(ttk.Frame):
             pcRes = self.getBundlePath(plat)
             files = conf.get(key_baseRes) or []
             self.fileExplorer.clearItems()
-            self.fileExplorer.setPath(pcRes, ('.manifest','.DS_Store', '.json'), self.getFiles(files))
+            
+            self.packageFiles = self.fileExplorer.setPath(
+                pcRes, 
+                skipPatterns,
+                self.getFiles(files), 
+                self.__getCurPackageConf()
+            )
             # self.fileExplorer.setPath(pcRes, ('.manifest', ""), files)
             self.setFiles(files)
             self.fileChanges = False
             # self.saveConfigs()        
 
-    def backRes(self, path, outPath, plat, version, files) :
+    def backRes(self, path, outPath, plat, version, files, histroyPath) :
         if len(files) == 0 :
             # print(u'没有资源变动，不打包备份。')
             return
@@ -511,20 +562,18 @@ class AppFrame(ttk.Frame):
             os.makedirs(outPath)
 
         zf = zipfile.ZipFile(pathJoin(outPath, zipName), 'w')
-        # files = list(files.keys())
         files = list(files)
-        # 添加resConf.bytes
-        files.append(configFileName)
+        # 添加服务器配置文件
         files.append(STR_F_SERV_CONFIG)
+
         for f in files :
             p = pathJoin(path, f) 
             if os.path.isfile(p) :
                 zf.write(p, pathJoin(plat, f))
         zf.close()
-        shutil.copyfile(pathJoin(path, historyFileName), pathJoin(outPath, historyFileName))
+        shutil.copyfile(histroyPath, pathJoin(outPath, historyFileName))
 
     def updateServer(self, path, outPath, version, files) :
-        # print('updateServer', path, outPath, version, files)
         if len(files) == 0 :
             # print(u'没有资源变动，不打包备份。')
             return
@@ -535,17 +584,20 @@ class AppFrame(ttk.Frame):
 
         if not os.path.isdir(outPath) :
             os.makedirs(outPath)
-            # return
         files = list(files)
-        files.append(configFileName)
-        # p = pathJoin(path, f)
+        # 添加服务器配置文件
+        files.append(STR_F_SERV_CONFIG)
+
+
         for f in files :
             tp = pathJoin(outPath, f)
             tpdir = os.path.dirname(tp)
             if not os.path.exists(tpdir) :
                 os.makedirs(tpdir)
-            shutil.copyfile(pathJoin(path, f), pathJoin(outPath, f))
-            # print('copy', pathJoin(path, f), pathJoin(outPath, f))
+            try:
+                shutil.copyfile(pathJoin(path, f), pathJoin(outPath, f))
+            except Exception as e:
+                ShowInfoDialog(str(e))    
 
     def setFiles(self, files) :
         # buildPlatAll 定义的渠道名是特殊的资源，每个渠道不同，但所有渠道都需要
@@ -563,4 +615,7 @@ class AppFrame(ttk.Frame):
         self.newVerWid.setCurVersion('0.0.0.0')
         self.saveCurProj()
         self.selectAProj(self.projCombo.get())
+
+    def freshUI(self):
+        self.selectAProj(self.curProjName)
 

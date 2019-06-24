@@ -9,18 +9,18 @@ from TkToolsD.CommonWidgets import *
 tk, ttk = getTk()
 
 def initUI() :
-	root = tk.Tk()
+    root = tk.Tk()
 
-	app = AppFrame(root)
-	app.loadConfigs('config/projConfig.json')
-	app.pack(fill=tk.BOTH, expand=True)
-	centerToplevel(app)
-	app.focus_set()
-	root.mainloop()
+    app = AppFrame(root)
+    app.loadConfigs('config/projConfig.json')
+    app.pack(fill=tk.BOTH, expand=True)
+    centerToplevel(app)
+    app.focus_set()
+    root.mainloop()
 
 def main() :
-	initUI()
+    initUI()
 
 if __name__ == '__main__':
-	main()
+    main()
 
