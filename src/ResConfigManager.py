@@ -9,7 +9,10 @@ import re
 from DKVTools.Funcs import *
 from TkToolsD.CommonWidgets import *
 
-configFileName = 'base'
+# 游戏包含的所有资源包配置
+pkgsName = 'pkgs'
+# 游戏基本资源的配置，所有资源默认都是base资源包里面的
+baseConfName = 'base'
 historyFileName = 'history.json'
 crcConfExt = '.manifest'
 cfgExt = '.bytes'
@@ -63,7 +66,7 @@ class ResConfigManager(object) :
         return pathJoin(path or self.path, 'version')
 
     def getBasePath(self, path=None):
-        return pathJoin(self.getVersionDir(path), configFileName+cfgExt)
+        return pathJoin(self.getVersionDir(path), baseConfName+cfgExt)
 
     def getPkgCfgPath(self, pkg, path=None) :
         return pathJoin(self.getVersionDir(path), pkg+cfgExt)
@@ -122,6 +125,10 @@ class ResConfigManager(object) :
         for fp in tuple(pkgFiles.values()) :
             fp.close()
 
+        f = openFile(self.getPkgCfgPath(pkgsName, path=path), 'w')
+        f.write(','.join(tuple(pkgFiles.keys())))
+        f.close()
+
     def readResInfo(self, path) :
         f = open(path, 'rb')
         lines = f.readlines()
@@ -161,14 +168,21 @@ class ResConfigManager(object) :
         orifiles, version = self.getHistoryFromVer(diffFrom)
         files = self.getCurResInfos()
 
+        sameFiles = []
+
         for f, crc in files.items() :
             if crc == orifiles.get(f) :
                 # 删除相同的文件
-                del files[f]
+                # del files[f]
+                sameFiles.append(f)
+                
+        for f in sameFiles :
+            del files[f]
 
-        # 添加有修改的文件所对应的配置文件
+        # 添加有修改的文件所对应的配置文件以及所有包的配置文件
         confs = []
         pkgs = self.getPkgNames(files)
+        pkgs.append(pkgsName)
         for pkg in pkgs :
             pkg = self.getRelativePath(self.getPkgCfgPath(pkg))
             confs.append(pkg)
@@ -229,7 +243,7 @@ class ResConfigManager(object) :
                 m = p.match(name)
                 if m :
                     return k
-        return configFileName
+        return baseConfName
 
     def getPkgNames(self, files) :
         names = []

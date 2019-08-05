@@ -35,7 +35,7 @@ class ResExplorer(ScrollFrame) :
 
         self.rowHeight = 20
         self.skipPatterns = ()
-        self.packagePatterns = ()
+        self.packagePatterns = []
         self.packageFiles = {}
         self.choosenFiles = ()
         self.timeStamp = time.time()
@@ -295,11 +295,14 @@ class ResExplorer(ScrollFrame) :
 
             self.skipPatterns = [re.compile('^'+p+'$') for p in skip]
 
-            self.packagePatterns = {}
+            self.packagePatterns = []
             self.packageFiles = {}
 
-            for k in tuple(packages.keys()) :
-                self.packagePatterns[k] = re.compile('^'+packages.get(k)+'$')
+            keys = list(packages.keys())
+            keys.sort()
+
+            for k in keys :
+                self.packagePatterns.append((re.compile('^'+packages.get(k)+'$'), k))
 
             self.clearItems()
             self.rootPath = path
@@ -401,8 +404,7 @@ class ResExplorer(ScrollFrame) :
         return False
 
     def getPackageName(self, name) :
-        for k in tuple(self.packagePatterns.keys()) :
-            p = self.packagePatterns.get(k)
+        for p, k in self.packagePatterns :
             if p :
                 m = p.match(name)
                 if m :

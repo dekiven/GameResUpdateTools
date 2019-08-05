@@ -14,12 +14,21 @@ from TkToolsD.VersionWidget import VersionWidget
 
 tk, ttk = getTk()
 
-from ProjConfigManager import ProjConfigManager
-from ResConfigManager import ResConfigManager
-from ResConfigManager import historyFileName
-from ConfigEditWindow import ConfigEditWindow
-from AsbPackageWindow import AsbPackageWindow
-from ResExplorer import ResExplorer
+try:
+    from ProjConfigManager import ProjConfigManager
+    from ResConfigManager import ResConfigManager
+    from ResConfigManager import historyFileName
+    from ConfigEditWindow import ConfigEditWindow
+    from AsbPackageWindow import AsbPackageWindow
+    from ResExplorer import ResExplorer
+except Exception as e:
+    from .ProjConfigManager import ProjConfigManager
+    from .ResConfigManager import ResConfigManager
+    from .ResConfigManager import historyFileName
+    from .ConfigEditWindow import ConfigEditWindow
+    from .AsbPackageWindow import AsbPackageWindow
+    from .ResExplorer import ResExplorer
+    
 
 objPool = []
 event_cbb = '<<ComboboxSelected>>'
@@ -29,7 +38,7 @@ STR_EXT = '.unity3d'
 resPlatforms = ('and', 'ios', 'pc', 'mac',)
 buildPlatAll = [ 
     # 'version', 
-    'baselanguage'+STR_EXT, 
+    'basicres'+STR_EXT, 
     'updateserver'+STR_EXT,
 ]
 buildPlatAll = buildPlatAll + [p+STR_EXT for p in resPlatforms]
@@ -47,7 +56,6 @@ key_servConf = 'servConf'
 key_packageConf = 'asbPackages'
 
 STR_F_SERV_CONFIG = 'servConf.bytes'
-STR_F_PKG_CONFIG = 'asbPackages.bytes'
 
 def relativeTo(path, root) :
     path = path.replace('\\', '/')
@@ -370,13 +378,20 @@ class AppFrame(ttk.Frame):
             # TODO:
             f.close()
 
+    def __saveAllServConf(self) :
+        for key in resPlatforms :
+            conf = self.getProjConfig(key_servConf) or {}
+            data = conf.get(key) or {}
+            self.__saveServConfig(key, data)
+
     def __onClickPkgConfig(self):
         ce = AsbPackageWindow(self)
         conf = self.getProjConfig(key_packageConf)
         if conf is None :
-            self.changeProjConfig(key_packageConf, {})
+            conf = {}
+            self.changeProjConfig(key_packageConf, conf)
         ce.setCallback(self.__onPkgConfChanged)
-        ce.setData( conf or {})
+        ce.setData( conf )
         centerToplevel(ce)
         root = getToplevel(self)
         root.wait_window(ce)
@@ -385,22 +400,8 @@ class AppFrame(ttk.Frame):
         # conf = self.getProjConfig(key_packageConf) or {}
         # conf[key] = data
         self.changeProjConfig(key_packageConf, data)
-        self.__savePkgConfig(data)
         self.saveCurProj()
         self.freshUI()
-
-    def __savePkgConfig(self, data) :
-        # TODO:保存到根目录并刷新文件浏览器
-        # if key in resPlatforms :
-        pPath = self.getProjConfig(key_asbDir)
-        # pPath = pathJoin(asbDir, key)
-        if not os.path.isdir(pPath) :
-            os.makedirs(pPath)
-        f = open(pathJoin(pPath, STR_F_PKG_CONFIG), 'w')
-        for k in tuple(data.keys()) :
-            f.write('%s|%s\n'%(k, str(data.get(k)[1])))
-        # TODO:
-        f.close()
 
 
     def getBundlePath(self, platform) :
@@ -546,7 +547,10 @@ class AppFrame(ttk.Frame):
             # self.fileExplorer.setPath(pcRes, ('.manifest', ""), files)
             self.setFiles(files)
             self.fileChanges = False
-            # self.saveConfigs()        
+            # self.saveConfigs()  
+
+            # 生成服务器配置文件
+            self.__saveAllServConf()    
 
     def backRes(self, path, outPath, plat, version, files, histroyPath) :
         if len(files) == 0 :
